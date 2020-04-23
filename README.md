@@ -1,4 +1,4 @@
-# ValveConvarParsingSystem
+# Valve Convar Parser
 A console application capable of lookingthrough a directory of source code from Valve Corporation's source files,
 and producing them in a variety of formats.
 
