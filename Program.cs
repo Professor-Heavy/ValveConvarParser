@@ -12,8 +12,10 @@ namespace ValveConvarParsingSystem
     {
         //TODO: Spread this program out a little bit in future builds. Could get a tad too large if left unchecked.
 
-        static string helpMessage = "Usage: " + System.Diagnostics.Process.GetCurrentProcess().ProcessName + " [Input Path] [Output Path] [Output Format (sql/txt)]";
+        static string helpMessage = "Usage: " + System.Diagnostics.Process.GetCurrentProcess().ProcessName + " [Input Path] [Output Path] [Output Format (sql/txt)] [/verbose (optional)]";
         static string lastError;
+
+        static bool verboseOutput = false;
 
         static List<ConVar> conVarList = new List<ConVar>();
 
@@ -107,6 +109,14 @@ namespace ValveConvarParsingSystem
                     default:
                         DisplayMessage("Output Format argument is not valid. \n" + helpMessage);
                         return;
+                }
+            }
+
+            if(args.Length == 4)
+            {
+                if(args[3] == "/verbose")
+                {
+                    verboseOutput = true;
                 }
             }
             string[] directoryFiles = GetFilesInDirectory(args[0]);
@@ -284,21 +294,36 @@ namespace ValveConvarParsingSystem
                         switch (result)
                         {
                             case LineRegexResult.ConVar:
-#if DEBUG
-                                Console.WriteLine("Found the following: " + conVar.name);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}.",
+                                        conVar.name,
+                                        conVar.initialValue
+                                        ));
+                                }
                                 break;
                             case LineRegexResult.ConVarWithFlags:
                                 conVar.flags = StringsToFlag(matches[3]);
-#if DEBUG
-                                Console.WriteLine("Found the following: " + conVar.name);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}. Flags: {2}.",
+                                        conVar.name,
+                                        conVar.initialValue,
+                                        FlagsToString(conVar.flags)
+                                        ));
+                                }
                                 break;
                             case LineRegexResult.ConVarDescription:
                                 conVar.description = ParseString(matches[4], true, false);
-#if DEBUG
-                                Console.WriteLine("Found the following: " + conVar.name + " with description " + conVar.description);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}. Flags: {2}. Description: {3}.",
+                                        conVar.name,
+                                        conVar.initialValue,
+                                        FlagsToString(conVar.flags),
+                                        conVar.description
+                                        ));
+                                }
                                 break;
                             case LineRegexResult.ConVarLimitedInput:
 
@@ -307,18 +332,33 @@ namespace ValveConvarParsingSystem
                                 conVar.minValue = ParseString(matches[6], true, false);
                                 conVar.usesMaxValue = IsTrue(matches[7]);
                                 conVar.maxValue = ParseString(matches[8], true, false);
-#if DEBUG
-                                Console.WriteLine("Found the following: " + conVar.name + " with a low value of " + conVar.minValue + " and a max value of " + conVar.maxValue);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}. Flags: {2}. Description: {3}. Minimum/Maximum values: {4}/{5}.",
+                                        conVar.name,
+                                        conVar.initialValue,
+                                        FlagsToString(conVar.flags),
+                                        conVar.description,
+                                        conVar.minValue,
+                                        conVar.maxValue
+                                        ));
+                                }
                                 break;
                             case LineRegexResult.ConVarCallback:
 
                                 conVar.description = ParseString(matches[4], true, false);
                                 conVar.executesCallback = true;
                                 conVar.callbackName = ParseString(matches[5], true, false);
-#if DEBUG
-                                Console.WriteLine("Found the following: " + conVar.name + " with a callback of " + conVar.callbackName);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}. Flags: {2}. Description: {3}. Callback name: {4}.",
+                                        conVar.name,
+                                        conVar.initialValue,
+                                        FlagsToString(conVar.flags),
+                                        conVar.description,
+                                        conVar.callbackName
+                                        ));
+                                }
                                 break;
                             case LineRegexResult.ConVarLimitedInputCallback:
 
@@ -329,9 +369,18 @@ namespace ValveConvarParsingSystem
                                 conVar.maxValue = ParseString(matches[8], true, false);
                                 conVar.executesCallback = true;
                                 conVar.callbackName = ParseString(matches[9], true, false);
-#if DEBUG
-                                Console.WriteLine("Found the following: " + conVar.name + " with a low value of " + conVar.minValue + " and a max value of " + conVar.maxValue + " with a callback of " + conVar.callbackName);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}. Flags: {2}. Description: {3}. Minimum/Maximum values: {4}/{5}. Callback name: {6}.",
+                                        conVar.name,
+                                        conVar.initialValue,
+                                        FlagsToString(conVar.flags),
+                                        conVar.description,
+                                        conVar.minValue,
+                                        conVar.maxValue,
+                                        conVar.callbackName
+                                        ));
+                                }
                                 break;
                             case LineRegexResult.ConVarLimitedInputComp:
                                 conVar.description = ParseString(matches[4], true, false);
@@ -345,9 +394,20 @@ namespace ValveConvarParsingSystem
                                 conVar.competitiveMaxValue = ParseString(matches[12], true, false);
                                 conVar.executesCallback = true;
                                 conVar.callbackName = ParseString(matches[13], true, false);
-#if DEBUG
-                                Console.WriteLine("Found the following competitive value: " + conVar.name + " with a low value of " + conVar.minValue + " and a max value of " + conVar.maxValue + " with a callback of " + conVar.callbackName);
-#endif
+                                if (verboseOutput)
+                                {
+                                    DisplayMessage(string.Format("Found the ConVar: {0}. Default Value: {1}. Flags: {2}. Description: {3}. Minimum/Maximum values: {4}/{5}. Competitive Minimum/Maximum Values: {6}/{7}. Callback name: {8}.",
+                                        conVar.name,
+                                        conVar.initialValue,
+                                        FlagsToString(conVar.flags),
+                                        conVar.description,
+                                        conVar.minValue,
+                                        conVar.maxValue,
+                                        conVar.competitiveMinValue,
+                                        conVar.competitiveMaxValue,
+                                        conVar.callbackName
+                                        ));
+                                }
                                 break;
                         }
                         conVarList.Add(conVar);
@@ -369,6 +429,7 @@ namespace ValveConvarParsingSystem
 #if DEBUG
                 if (insideStagingDirective)
                 {
+                    //I don't even think this even deserves to be here, it can only happen if the parser doesn't detect the directive, which is super rare.
                     DisplayMessage("Syntax error in code, the #ifdef STAGING_ONLY directive didn't close?!");
                 }
 #endif
@@ -416,9 +477,10 @@ namespace ValveConvarParsingSystem
                 }
                 else
                 {
-#if DEBUG       
-                    DisplayMessage("Unable to parse line: " + textLine);
-#endif          
+                    if (verboseOutput)
+                    {
+                        DisplayMessage("Unable to parse line: " + textLine);
+                    }
                     conVarFailures++;
                 }
             }
@@ -505,9 +567,9 @@ namespace ValveConvarParsingSystem
                 {
                     if(returnString != string.Empty)
                     {
-                        returnString += "|";
+                        returnString += " |";
                     }
-                    returnString += " " + Enum.GetName(typeof(ConVarFlags), i) + " ";
+                    returnString += " " + Enum.GetName(typeof(ConVarFlags), i);
                 }
             }
             return returnString;
