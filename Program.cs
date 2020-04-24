@@ -472,7 +472,18 @@ namespace ValveConvarParsingSystem
         static bool IsTrue(string eval)
         {
             eval = ParseString(eval, true, false);
-            if (eval == "1")
+            if(bool.TryParse(eval, out bool result))
+            {
+                return result;
+            }
+            else
+            {
+#if DEBUG
+                Console.WriteLine("An attempt to parse an bool value went wrong. Very bad.");
+#endif
+                return false;
+            }
+        }
             {
                 return true;
             }
