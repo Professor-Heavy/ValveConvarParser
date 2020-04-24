@@ -12,9 +12,8 @@ namespace ValveConvarParsingSystem
         public string initialValue;
         public string description;
 
-        public string conVarType;
-
         public ConVarFlags flags;
+        public ConVarType conVarType;
 
         public bool usesMinValue;
         public string minValue;
@@ -31,6 +30,24 @@ namespace ValveConvarParsingSystem
         public bool usesCompetitiveMaxValue;
         public string competitiveMaxValue;
 
-        public bool isStagingOnly;
+        public Symbol symbolEnforced;
+    }
+
+    public enum ConVarType
+    {
+        ConVar = 2, //Simple ConVar.
+        ConVarWithFlags, //ConVar with flag values.
+        ConVarDescription, //ConVar with description.
+        ConVarCallback, //ConVar with description and callback.
+        ConVarLimitedInput = 8, //ConVar with description and value limits.
+        ConVarLimitedInputCallback, //ConVar with description, value limits, and a callback.
+        ConVarLimitedInputComp = 13, //ConVar with description, value limits, Competitive Mode value limits, and a callback.
+    }
+
+    public enum Symbol
+    {
+        NONE,
+        STAGING_ONLY,
+        GAME_DLL
     }
 }
