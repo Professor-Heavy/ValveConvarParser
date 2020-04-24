@@ -26,10 +26,10 @@ namespace ValveConvarParsingSystem
         public string callbackName;
 
         public bool usesCompetitiveMinValue;
-        public float competitiveMinValue;
+        public string competitiveMinValue;
 
         public bool usesCompetitiveMaxValue;
-        public float competitiveMaxValue;
+        public string competitiveMaxValue;
 
         public bool isStagingOnly;
     }

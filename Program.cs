@@ -23,28 +23,16 @@ namespace ValveConvarParsingSystem
 
         //TODO: The insane amount of patterns here is because there's apparently no way to check for multiple ',' characters... Is there?
         static string baseConVarPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"""; //The ConVar pattern that will return true for ConVar ALL matches.
-        static string conVarPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)""\s*\)";
-        static string conVarFlagPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"",(.*?)\s*?\)";
-        static string conVarDescriptionPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"",(.*?),\s*""(.*?)""\s*\)";
-        static string conVarLimitedPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"",\s*(.*?),\s*""(.*?)"",\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s\)";
-        static string conVarCallbackPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"",(.*?),\s*""(.*?)"",\s*(.*?)\s*\)";
-        static string conVarLimitedCallbackPattern = @"((?:GCConVar|ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"",\s*(.*?),\s*""(.*?)"",\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s\)";
 
-        //static string conVarLimitedCompPattern = @"((?:ConVar_ServerBounded|ConVar))\s*(\S*)\s*\(\s*""(.*?)"",\s*""(.*?)"",\s*(.*?),\s*""(.*?)"",\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?),\s*(.*?)\s\)";
+        static string conVarArgumentSplitPattern = @"(?!\B""[^""]*)(?:,|\(|\)\;)(?![^""]*""\B)(?!\*\\\B)";
 
         //REGEX CHECKS
         static Regex directiveStartRegex = new Regex(directiveStartPattern, RegexOptions.IgnoreCase);
         static Regex directiveEndRegex = new Regex(directiveEndPattern, RegexOptions.IgnoreCase);
 
         static Regex baseConVarRegex = new Regex(baseConVarPattern, RegexOptions.IgnoreCase);
-        static Regex conVarRegex = new Regex(conVarPattern, RegexOptions.IgnoreCase);
-        static Regex conVarFlagRegex = new Regex(conVarFlagPattern, RegexOptions.IgnoreCase);
-        static Regex conVarDescriptionRegex = new Regex(conVarDescriptionPattern, RegexOptions.IgnoreCase);
-        static Regex conVarLimitedRegex = new Regex(conVarLimitedPattern, RegexOptions.IgnoreCase);
-        static Regex conVarCallbackRegex = new Regex(conVarCallbackPattern, RegexOptions.IgnoreCase);
-        static Regex conVarLimitedCallbackRegex = new Regex(conVarLimitedCallbackPattern, RegexOptions.IgnoreCase);
 
-        //static Regex conVarLimitedCompRegex = new Regex(conVarLimitedCompPattern, RegexOptions.IgnoreCase);
+        static Regex conVarArgumentSplitRegex = new Regex(conVarArgumentSplitPattern, RegexOptions.IgnoreCase);
 
 
         static int conVarCount = 0;
@@ -109,21 +97,21 @@ namespace ValveConvarParsingSystem
             string filePath;
             ResultFormat format = ResultFormat.PLAINTEXT;
 
-            if(args.Length == 0)
+            if (args.Length == 0)
             {
                 DisplayMessage(helpMessage);
                 return;
             }
 
-            if(args[0] == "/?")
+            if (args[0] == "/?")
             {
                 DisplayMessage(helpMessage);
                 return;
             }
 
             filePath = args[0];
-            
-            if(args.Length == 1)
+
+            if (args.Length == 1)
             {
                 DisplayMessage("No output path specified.");
                 return;
@@ -133,7 +121,7 @@ namespace ValveConvarParsingSystem
 
             }
 
-            if(args.Length == 2)
+            if (args.Length == 2)
             {
                 DisplayMessage("No output format specified. Assuming txt.");
             }
@@ -184,7 +172,7 @@ namespace ValveConvarParsingSystem
             {
                 return Directory.GetFileSystemEntries(path, "*", SearchOption.TopDirectoryOnly);
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
                 lastError = "Directory path invalid.";
                 return null;
@@ -220,7 +208,7 @@ namespace ValveConvarParsingSystem
 
         static void WriteToOutput(ResultFormat format, string path)
         {
-            switch(format)
+            switch (format)
             {
                 case ResultFormat.PLAINTEXT:
                     try
@@ -230,8 +218,8 @@ namespace ValveConvarParsingSystem
                         {
                             string conVarString = string.Empty;
                             conVarString += conVar.name;
-                            conVarString += " - " + ParseFlags(conVar.flags);
-                            if(string.IsNullOrEmpty(conVar.description)) //Maybe work a little better with the layout in the future...?
+                            conVarString += " - " + FlagsIntToString(conVar.flags);
+                            if (string.IsNullOrEmpty(conVar.description)) //Maybe work a little better with the layout in the future...?
                             {
                                 conVarString += " - No description";
                             }
@@ -274,7 +262,7 @@ namespace ValveConvarParsingSystem
 
         static void RecursivelyParseFiles(string[] directoryFiles)
         {
-            foreach(string path in directoryFiles)
+            foreach (string path in directoryFiles)
             {
                 if (Directory.Exists(path)) //This is a directory.
                 {
@@ -290,7 +278,7 @@ namespace ValveConvarParsingSystem
         static void ParseFile(string path)
         {
             string extension = Path.GetExtension(path);
-            if(extension != ".cpp" && extension != ".h")
+            if (extension != ".cpp" && extension != ".h")
             {
                 return;
             }
@@ -298,7 +286,7 @@ namespace ValveConvarParsingSystem
             {
                 //NOTE: The current method reads one line after another. I'm not sure of any occurrences,
                 //but isn't it possible that some ConVar values are across multiple lines?
-                
+
                 //TODO: ...Yes, apparently some ConVar values are across multiple lines.
 
                 string text;
@@ -326,6 +314,8 @@ namespace ValveConvarParsingSystem
 
                         conVar.isStagingOnly = insideStagingDirective;
                         conVar.conVarType = baseConVarRegex.Match(text).Groups[1].Value;
+
+                        string[] matches = Regex.Split(text, conVarArgumentSplitPattern); //Unnecessary repetition. In fact, is a LineRegexResult return even necessary???
                         switch (result)
                         {
                             case LineRegexResult.ConVar:
@@ -340,47 +330,59 @@ namespace ValveConvarParsingSystem
 #endif
                                 break;
                             case LineRegexResult.ConVarDescription:
-                                conVar.description = conVarDescriptionRegex.Match(text).Groups[6].Value;
+                                conVar.description = ParseString(matches[4], true, false);
 #if DEBUG
                                 Console.WriteLine("Found the following: " + conVar.name + " with description " + conVar.description);
 #endif
                                 break;
                             case LineRegexResult.ConVarLimitedInput:
 
-                                conVar.description = conVarLimitedRegex.Match(text).Groups[6].Value;
-                                conVar.usesMinValue = IsTrue(conVarLimitedRegex.Match(text).Groups[7].Value);
-                                conVar.minValue = conVarLimitedRegex.Match(text).Groups[8].Value;
-                                conVar.usesMaxValue = IsTrue(conVarLimitedRegex.Match(text).Groups[9].Value);
-                                conVar.maxValue = conVarLimitedRegex.Match(text).Groups[10].Value;
+                                conVar.description = ParseString(matches[4], true, false);
+                                conVar.usesMinValue = IsTrue(matches[5]);
+                                conVar.minValue = ParseString(matches[6], true, false);
+                                conVar.usesMaxValue = IsTrue(matches[7]);
+                                conVar.maxValue = ParseString(matches[8], true, false);
 #if DEBUG
                                 Console.WriteLine("Found the following: " + conVar.name + " with a low value of " + conVar.minValue + " and a max value of " + conVar.maxValue);
 #endif
                                 break;
                             case LineRegexResult.ConVarCallback:
 
-                                conVar.description = conVarCallbackRegex.Match(text).Groups[6].Value;
+                                conVar.description = ParseString(matches[4], true, false);
                                 conVar.executesCallback = true;
-                                conVar.callbackName = conVarCallbackRegex.Match(text).Groups[7].Value;
+                                conVar.callbackName = ParseString(matches[5], true, false);
 #if DEBUG
                                 Console.WriteLine("Found the following: " + conVar.name + " with a callback of " + conVar.callbackName);
 #endif
                                 break;
                             case LineRegexResult.ConVarLimitedInputCallback:
 
-                                conVar.description = conVarLimitedCallbackRegex.Match(text).Groups[6].Value;
-                                conVar.usesMinValue = IsTrue(conVarLimitedCallbackRegex.Match(text).Groups[7].Value);
-                                conVar.minValue = conVarLimitedCallbackRegex.Match(text).Groups[8].Value;
-                                conVar.usesMaxValue = IsTrue(conVarLimitedCallbackRegex.Match(text).Groups[9].Value);
-                                conVar.maxValue = conVarLimitedCallbackRegex.Match(text).Groups[10].Value;
+                                conVar.description = ParseString(matches[4], true, false);
+                                conVar.usesMinValue = IsTrue(matches[5]);
+                                conVar.minValue = ParseString(matches[6], true, false);
+                                conVar.usesMaxValue = IsTrue(matches[7]);
+                                conVar.maxValue = ParseString(matches[8], true, false);
                                 conVar.executesCallback = true;
-                                conVar.callbackName = conVarLimitedCallbackRegex.Match(text).Groups[11].Value;
+                                conVar.callbackName = ParseString(matches[9], true, false);
 #if DEBUG
                                 Console.WriteLine("Found the following: " + conVar.name + " with a low value of " + conVar.minValue + " and a max value of " + conVar.maxValue + " with a callback of " + conVar.callbackName);
 #endif
                                 break;
                             case LineRegexResult.ConVarLimitedInputComp:
-                                //TODO: Todo, or not todo?
-                                //I'm considering ignoring this all together, it depends on if other code uses it or not.
+                                conVar.description = ParseString(matches[4], true, false);
+                                conVar.usesMinValue = IsTrue(matches[5]);
+                                conVar.minValue = ParseString(matches[6], true, false);
+                                conVar.usesMaxValue = IsTrue(matches[7]);
+                                conVar.maxValue = ParseString(matches[8], true, false);
+                                conVar.usesCompetitiveMinValue = IsTrue(matches[9]);
+                                conVar.competitiveMinValue = ParseString(matches[10], true, false);
+                                conVar.usesCompetitiveMaxValue = IsTrue(matches[11]);
+                                conVar.competitiveMaxValue = ParseString(matches[12], true, false);
+                                conVar.executesCallback = true;
+                                conVar.callbackName = ParseString(matches[13], true, false);
+#if DEBUG
+                                Console.WriteLine("Found the following competitive value: " + conVar.name + " with a low value of " + conVar.minValue + " and a max value of " + conVar.maxValue + " with a callback of " + conVar.callbackName);
+#endif
                                 break;
                         }
                         conVarList.Add(conVar);
@@ -411,48 +413,51 @@ namespace ValveConvarParsingSystem
         static LineRegexResult PerformRegexChecks(string textLine)
         {
             //TODO: Real meaty checks right about here...
-
-            //I'm also sacrificing performance for my own lack of knowledge of Regex.
-            //The code starts with the really long ones, and works its way down the list. This is because everything is so damn complicated in Regex, and having comma separators made this easier.
-            //Maybe in future, I should look at splitting the string. Only problem is that splitting it might also split the inside of any descriptions.
-            //Uhh...
-            //TODO: Better ConVar type checks. High priority.
-
-            if(baseConVarRegex.Match(textLine).Success)
+            if (baseConVarRegex.Match(textLine).Success)
             {
-                if (conVarLimitedCallbackRegex.Match(textLine).Success)
+                string[] results = Regex.Split(textLine, conVarArgumentSplitPattern); //Find any commas that are not in "s
+                //NOTE: This code matches any that have been commented out, which happens rarely in the code.
+
+                int argumentCount = results.Length - 1;
+
+                //Maybe it's possible to use the enum int values so that I'm not running through so many of these.
+                if (argumentCount == 3)
                 {
-                    return LineRegexResult.ConVarLimitedInputCallback;
+                    return LineRegexResult.ConVar;
                 }
-                if (conVarLimitedRegex.Match(textLine).Success)
+                if (argumentCount == 4)
                 {
-                    return LineRegexResult.ConVarLimitedInput;
+                    return LineRegexResult.ConVarWithFlags;
                 }
-                if (conVarCallbackRegex.Match(textLine).Success)
-                {
-                    return LineRegexResult.ConVarCallback;
-                }
-                if (conVarDescriptionRegex.Match(textLine).Success)
+                if (argumentCount == 5)
                 {
                     return LineRegexResult.ConVarDescription;
                 }
-                if (conVarFlagRegex.Match(textLine).Success)
+                if (argumentCount == 6)
                 {
-                    return LineRegexResult.ConVar;
+                    return LineRegexResult.ConVarCallback;
                 }
-                if (conVarRegex.Match(textLine).Success)
+                if (argumentCount == 9)
                 {
-                    return LineRegexResult.ConVar;
+                    return LineRegexResult.ConVarLimitedInput;
+                }
+                if (argumentCount == 10)
+                {
+                    return LineRegexResult.ConVarLimitedInputCallback;
+                }
+                if (argumentCount == 14)
+                {
+                    return LineRegexResult.ConVarLimitedInputComp;
                 }
                 else
                 {
-#if DEBUG
+#if DEBUG       
                     DisplayMessage("Unable to parse line: " + textLine);
-#endif
+#endif          
                     conVarFailures++;
                 }
             }
-            else if(directiveStartRegex.Match(textLine).Success)
+            else if (directiveStartRegex.Match(textLine).Success)
             {
                 return LineRegexResult.DirectiveStart;
             }
@@ -466,11 +471,12 @@ namespace ValveConvarParsingSystem
 
         static bool IsTrue(string eval)
         {
-            if(eval == "1")
+            eval = ParseString(eval, true, false);
+            if (eval == "1")
             {
                 return true;
             }
-            if(eval == "true")
+            if (eval == "true")
             {
                 return true;
             }
@@ -479,10 +485,24 @@ namespace ValveConvarParsingSystem
                 return false;
             }
         }
-        
-        static string ParseFlags(int flags)
+
+        static string FlagsIntToString(int flags)
         {
             return "No_Flags";
+        }
+
+        static string ParseString(string str, bool removeWhiteSpace, bool removeQuotes)
+        {
+            string returnString = str;
+            if(removeWhiteSpace)
+            {
+                returnString = str.Trim();
+            }
+            if(removeQuotes)
+            {
+                returnString = str.Trim('"');
+            }
+            return returnString;
         }
     }
 }
