@@ -14,7 +14,7 @@ namespace ValveConvarParsingSystem
 
         public string conVarType;
 
-        public int flags;
+        public ConVarFlags flags;
 
         public bool usesMinValue;
         public string minValue;

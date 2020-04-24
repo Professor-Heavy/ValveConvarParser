@@ -57,41 +57,6 @@ namespace ValveConvarParsingSystem
             DirectiveEnd //#endif directive.
         }
 
-        //TODO: Do something with this. It's just sitting here.
-        enum ConVarFlags 
-        {
-            FCVAR_NONE,
-            FCVAR_UNREGISTERED,
-            FCVAR_DEVELOPMENTONLY,
-            FCVAR_GAMEDLL,
-            FCVAR_CLIENTDLL,
-            FCVAR_HIDDEN,
-            FCVAR_PROTECTED,
-            FCVAR_SPONLY,
-            FCVAR_ARCHIVE,
-            FCVAR_NOTIFY,
-            FCVAR_USERINFO,
-            FCVAR_CHEAT,
-            FCVAR_PRINTABLEONLY,
-            FCVAR_UNLOGGED,
-            FCVAR_NEVER_AS_STRING,
-            FCVAR_REPLICATED,
-            FCVAR_DEMO,
-            FCVAR_DONTRECORD,
-            FCVAR_RELOAD_MATERIALS,
-            FCVAR_RELOAD_TEXTURES,
-            FCVAR_NOT_CONNECTED,
-            FCVAR_MATERIAL_SYSTEM_THREAD,
-            FCVAR_ARCHIVE_XBOX,
-            FCVAR_ACCESSIBLE_FROM_THREADS,
-            FCVAR_SERVER_CAN_EXECUTE,
-            FCVAR_SERVER_CANNOT_QUERY,
-            FCVAR_CLIENTCMD_CAN_EXECUTE,
-            FCVAR_EXEC_DESPITE_DEFAULT,
-            FCVAR_INTERNAL_USE,
-            FCVAR_ALLOWED_IN_COMPETITIVE,
-        }
-
         static void Main(string[] args)
         {
             string filePath;
@@ -133,7 +98,7 @@ namespace ValveConvarParsingSystem
                     case ".sql":
                         DisplayMessage("SQL format is not yet supported. Sorry. :(");
                         return;
-                        //format = ResultFormat.SQL;
+                    //format = ResultFormat.SQL;
                     case "txt":
                     case ".txt":
                     case "text":
@@ -218,7 +183,7 @@ namespace ValveConvarParsingSystem
                         {
                             string conVarString = string.Empty;
                             conVarString += conVar.name;
-                            conVarString += " - " + FlagsIntToString(conVar.flags);
+                            conVarString += " -" + FlagsToString(conVar.flags);
                             if (string.IsNullOrEmpty(conVar.description)) //Maybe work a little better with the layout in the future...?
                             {
                                 conVarString += " - No description";
@@ -300,7 +265,7 @@ namespace ValveConvarParsingSystem
                     {
                         ConVar conVar = new ConVar();
                         conVar.variableName = baseConVarRegex.Match(text).Groups[2].Value;
-                        if(string.IsNullOrEmpty(conVar.variableName))
+                        if (string.IsNullOrEmpty(conVar.variableName))
                         {
                             conVar.variableName = "[NoVariable]";
                         }
@@ -324,7 +289,7 @@ namespace ValveConvarParsingSystem
 #endif
                                 break;
                             case LineRegexResult.ConVarWithFlags:
-                                conVar.flags = 0; //TODO: This.
+                                conVar.flags = StringsToFlag(matches[3]);
 #if DEBUG
                                 Console.WriteLine("Found the following: " + conVar.name);
 #endif
@@ -484,22 +449,68 @@ namespace ValveConvarParsingSystem
                 return false;
             }
         }
+
+        static ConVarFlags StringsToFlag(string flags)
+        {
+            ConVarFlags bitValue = 0;
+            string returnString = ParseString(flags, true, false);
+            string[] stringFlagArray = returnString.Split('|')
+                .Select(str => str.Trim()).ToArray();
+            for(int i = 0; i < stringFlagArray.Length; i++)
             {
-                return true;
+                ConVarFlags flagValue = FlagToEnum(stringFlagArray[i]);
+                if(flagValue != ConVarFlags.Default)
+                {
+                    bitValue |= flagValue;
+                }
+                else
+                {
+                    return ConVarFlags.Default;
+                }
             }
-            if (eval == "true")
+            return bitValue;
+        }
+
+        static ConVarFlags FlagToEnum(string flag)
+        {
+            if(Enum.TryParse(flag, out ConVarFlags result))
             {
-                return true;
+                return result;
             }
             else
             {
-                return false;
+                return ConVarFlags.Default;
             }
         }
 
-        static string FlagsIntToString(int flags)
+        static string FlagsToString(ConVarFlags flags)
         {
-            return "No_Flags";
+            //Hooh boy.
+
+            //While it IS true that this basically returns the initial strings, having the flags as their own type in the first place
+            //makes future implementations much more smoother. This is most likely going to change.
+
+            if(flags == 0)
+            {
+                return " FCVAR_NONE ";
+            }
+            if(flags == ConVarFlags.Default)
+            {
+                return " Flag parsing error. ";
+            }
+            string returnString = string.Empty;
+            foreach(int i in Enum.GetValues(typeof(ConVarFlags)))
+            {
+                if(flags.HasFlag((ConVarFlags)i))
+                {
+                    if(returnString != string.Empty)
+                    {
+                        returnString += "|";
+                    }
+                    returnString += " " + Enum.GetName(typeof(ConVarFlags), i) + " ";
+                }
+            }
+            return returnString;
         }
 
         static string ParseString(string str, bool removeWhiteSpace, bool removeQuotes)
