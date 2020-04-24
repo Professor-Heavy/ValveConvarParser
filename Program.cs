@@ -170,7 +170,7 @@ namespace ValveConvarParsingSystem
                             {
                                 conVarString += " - " + conVar.description;
                             }
-                            conVarString += conVar.symbolEnforced != Symbol.NONE ? " - Note: Only used if " + conVar.symbolEnforced.ToString() + " is defined." : string.Empty;
+                            conVarString += conVar.symbolRequired != Symbol.NONE ? " - Note: Only used if " + conVar.symbolRequired.ToString() + " is defined." : string.Empty;
 
                             conVarString += "\n";
                             byte[] bytes = new UTF8Encoding(true).GetBytes(conVarString);

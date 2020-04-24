@@ -229,7 +229,7 @@ namespace ValveConvarParsingSystem
                     AdvanceReader(); //Advance to get inside the bracket.
                     string[] arguments = ReadConVarParameters();
 
-                    currentConVar.symbolEnforced = currentSymbol;
+                    currentConVar.symbolRequired = currentSymbol;
                     currentConVar.conVarType = GetConVarTypeFromArgumentList(arguments);
                     ParseConVarArguments(arguments);
                     checkComplete = true;

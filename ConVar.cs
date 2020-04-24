@@ -30,7 +30,7 @@ namespace ValveConvarParsingSystem
         public bool usesCompetitiveMaxValue;
         public string competitiveMaxValue;
 
-        public Symbol symbolEnforced;
+        public Symbol symbolRequired;
     }
 
     public enum ConVarType
