@@ -214,8 +214,10 @@ namespace ValveConvarParsingSystem
 
         static void OrderByName()
         {
-            conVarList.OrderBy(cvar => cvar.name);
+            IOrderedEnumerable<ConVar> orderedList = conVarList.OrderBy(cvar => cvar.name);
+            conVarList = orderedList.ToList();
         }
+
         static void WriteToOutput(ResultFormat format, string path)
         {
             switch(format)
