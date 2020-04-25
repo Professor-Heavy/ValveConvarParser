@@ -246,6 +246,7 @@ namespace ValveConvarParsingSystem
         {
             if((int)currentConVar.conVarType > 2) //Must have flags.
             {
+                currentConVar.initialValue = arguments[1];
                 currentConVar.flags = Program.StringsToFlag(arguments[2]); //What in god's name- am I really doing this?
             }
             if ((int)currentConVar.conVarType > 3) //Must have a description.
