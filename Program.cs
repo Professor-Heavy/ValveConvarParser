@@ -260,6 +260,10 @@ namespace ValveConvarParsingSystem
             {
                 return result;
             }
+            else if(flag == "NULL")
+            {
+                return ConVarFlags.FCVAR_NONE;
+            }
             else
             {
                 return ConVarFlags.Default;
