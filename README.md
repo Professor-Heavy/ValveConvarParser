@@ -3,7 +3,7 @@ A console application capable of lookingthrough a directory of source code from 
 
 ## Usage
 
-```Usage: "ConvarParser.exe [Input Path] [Output Path] [Output Format (sql/txt)]```
+```Usage: "ConvarParser.exe [Input Path] [Output Path] [Output Format (sql/txt)] [/verbose]```
 
 The SQL output format will produce a .txt file anyway.
 
