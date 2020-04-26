@@ -20,7 +20,6 @@ namespace ValveConvarParsingSystem
         static List<ConVar> conVarList = new List<ConVar>();
 
         static int conVarCount = 0;
-        static int conVarFailures = 0;
         enum ResultFormat
         {
             SQL,
@@ -100,8 +99,7 @@ namespace ValveConvarParsingSystem
             OrderByName();
             WriteToOutput(format, args[1]);
 
-            DisplayMessage("Total ConVars written to file: " + conVarCount);
-            DisplayMessage("ConVars failed: " + conVarFailures);
+            DisplayMessage("\nTotal ConVars written to file: " + conVarCount);
         }
 
         static void DisplayMessage(string message)
@@ -203,6 +201,81 @@ namespace ValveConvarParsingSystem
             }
         }
 
+        static void WriteToDebug(List<ConVar> conVarList, string path)
+        {
+            DisplayMessage(string.Format("Found {0} ConVar(s) in file {1}:", conVarList.Count, Path.GetFileNameWithoutExtension(path)));
+            for(int i = 0; i < conVarList.Count; i++)
+            {
+                ConVar conVar = conVarList[i];
+                switch(conVar.conVarType)
+                {
+                    case ConVarType.ConVar:
+                    case ConVarType.ConVarWithFlags:
+                        DisplayMessage(string.Format("\t-{0}: {1} - {2}", i, conVar.name, conVar.initialValue, conVar.flags));
+                        break;
+                    case ConVarType.ConVarDescription:
+                        DisplayMessage(string.Format("\t-{0}: {1} - Default Value: {2} - Flags: {3} - \"{4}\"",
+                            i,
+                            conVar.name,
+                            conVar.initialValue,
+                            conVar.flags,
+                            conVar.description));
+                        break;
+                    case ConVarType.ConVarCallback:
+                        DisplayMessage(string.Format("\t-{0}: {1} - Default Value: {2} - Flags: {3} - \"{4}\" - Callback Function Name: {5}",
+                            i,
+                            conVar.name,
+                            conVar.initialValue,
+                            conVar.flags,
+                            conVar.description,
+                            conVar.callbackName));
+                        break;
+                    case ConVarType.ConVarLimitedInput:
+                        DisplayMessage(string.Format("\t-{0}: {1} - Default Value: {2} - Flags: {3} - \"{4}\" - Uses Min Value: {5} - Min Value: {6} - Uses Max Value: {7} - Max Value: {8}",
+                            i,
+                            conVar.name,
+                            conVar.initialValue,
+                            conVar.flags,
+                            conVar.description,
+                            conVar.usesMinValue,
+                            conVar.minValue,
+                            conVar.usesMaxValue,
+                            conVar.maxValue));
+                        break;
+                    case ConVarType.ConVarLimitedInputCallback:
+                        DisplayMessage(string.Format("\t-{0}: {1} - Default Value: {2} - Flags: {3} - \"{4}\" - Uses Min Value: {5} - Min Value: {6} - Uses Max Value: {7} - Max Value: {8} - Callback Function Name: {9}",
+                            i,
+                            conVar.name,
+                            conVar.initialValue,
+                            conVar.flags,
+                            conVar.description,
+                            conVar.usesMinValue,
+                            conVar.minValue,
+                            conVar.usesMaxValue,
+                            conVar.maxValue,
+                            conVar.callbackName));
+                        break;
+                    case ConVarType.ConVarLimitedInputComp:
+                        DisplayMessage(string.Format("\t-{0}: {1} - Default Value: {2} - Flags: {3} - \"{4}\" - Uses Min Value: {5} - Min Value: {6} - Uses Max Value: {7} - Max Value: {8} - Uses Comp Min Value: {9} - Comp Min Value: {10} - Uses Comp Max Value: {11} - Comp Max Value: {12} - Callback Function Name: {13}",
+                            i,
+                            conVar.name,
+                            conVar.initialValue,
+                            conVar.flags,
+                            conVar.description,
+                            conVar.usesMinValue,
+                            conVar.minValue,
+                            conVar.usesMaxValue,
+                            conVar.maxValue,
+                            conVar.usesCompetitiveMinValue,
+                            conVar.competitiveMinValue,
+                            conVar.usesCompetitiveMaxValue,
+                            conVar.competitiveMaxValue,
+                            conVar.callbackName));
+                        break;
+                }
+            }
+        }
+
         static void RecursivelyParseFiles(string[] directoryFiles)
         {
             foreach (string path in directoryFiles)
@@ -230,7 +303,13 @@ namespace ValveConvarParsingSystem
                 FileReader file = new FileReader();
                 file.LoadFile(path);
                 file.ReadWholeFile();
-                conVarList.AddRange(file.GetResults());
+                List<ConVar> fileConVars = file.GetResults();
+                conVarList.AddRange(fileConVars);
+                conVarCount += fileConVars.Count;
+                if(verboseOutput && fileConVars.Count > 0)
+                {
+                    WriteToDebug(fileConVars, path);
+                }
             }
         }
         public static ConVarFlags StringsToFlag(string flags)
