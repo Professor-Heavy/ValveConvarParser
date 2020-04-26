@@ -159,6 +159,7 @@ namespace ValveConvarParsingSystem
                         {
                             string conVarString = string.Empty;
                             conVarString += conVar.name;
+                            conVarString += ": " + conVar.initialValue;
                             conVarString += " -" + FlagsToString(conVar.flags);
                             if (string.IsNullOrEmpty(conVar.description)) //Maybe work a little better with the output formatting in the future...?
                             {
@@ -358,7 +359,7 @@ namespace ValveConvarParsingSystem
 
             if(flags == 0)
             {
-                return " FCVAR_NONE ";
+                return " FCVAR_NONE";
             }
             if(flags == ConVarFlags.Default)
             {
