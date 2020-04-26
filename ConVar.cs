@@ -48,6 +48,8 @@ namespace ValveConvarParsingSystem
     {
         NONE,
         STAGING_ONLY,
-        GAME_DLL
+        GAME_DLL,
+        TF_RAID_MODE,
+        _DEBUG
     }
 }
