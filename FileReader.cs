@@ -272,7 +272,7 @@ namespace ValveConvarParsingSystem
             {
                 currentConVar.usesCompetitiveMinValue = ParseBool(arguments[8]);
                 currentConVar.competitiveMinValue = arguments[9];
-                currentConVar.usesCompetitiveMinValue = ParseBool(arguments[10]);
+                currentConVar.usesCompetitiveMaxValue = ParseBool(arguments[10]);
                 currentConVar.competitiveMaxValue = arguments[11];
                 currentConVar.callbackName = arguments[12];
             }
